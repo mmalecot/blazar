@@ -32,7 +32,7 @@ blazar = "0.1"
 
 ## Examples
 
-# Window
+### Window
 
 Opens an empty window and prints events to stdout.
 
