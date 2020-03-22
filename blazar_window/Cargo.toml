@@ -1,0 +1,14 @@
+[package]
+name = "blazar_window"
+version = "0.1.0"
+authors = ["Mickaël Malécot <mickael.malecot@gmail.com>"]
+edition = "2018"
+
+[target.'cfg(target_family = "unix")'.dependencies]
+blazar_x11 = { path = "../blazar_x11" }
+
+[target.'cfg(target_family = "windows")'.dependencies]
+blazar_win32 = { path = "../blazar_win32" }
+
+[dependencies]
+blazar_event = { path = "../blazar_event" }

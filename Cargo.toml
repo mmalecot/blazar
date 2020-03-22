@@ -1,0 +1,31 @@
+[package]
+name = "blazar"
+version = "0.1.0"
+authors = ["Mickaël Malécot <mickael.malecot@gmail.com>"]
+edition = "2018"
+description = "Simple and lite game engine"
+license = "MIT/Apache-2.0"
+readme = "README.md"
+keywords = ["game", "engine"]
+categories = ["game-engines"]
+homepage = "https://github.com/mmalecot/blazar"
+documentation = "https://docs.rs/blazar"
+repository = "https://github.com/mmalecot/blazar"
+exclude = [".github/*", "examples/*"]
+
+[workspace]
+members = [
+    "blazar_dl",
+    "blazar_event",
+    "blazar_library",
+    "blazar_win32",
+    "blazar_window",
+    "blazar_x11",
+]
+
+[profile.release]
+lto = true
+
+[dependencies]
+blazar_event = { path = "blazar_event" }
+blazar_window = { path = "blazar_window" }
