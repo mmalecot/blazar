@@ -126,7 +126,7 @@ macro_rules! handle_type {
 #[macro_export]
 macro_rules! library {
     {
-        #[link(name = $lib_name:literal)]
+        #[load(name = $lib_name:literal)]
         struct $struct_name:ident {
             $(fn $fn_name:ident ($($param_name:ident : $param_type:ty),*) -> $ret_type:ty;)*
         }
