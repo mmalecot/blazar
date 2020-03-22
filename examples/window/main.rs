@@ -2,11 +2,11 @@
 
 use blazar::{
     event::{Event, Key},
-    window::Window,
+    window::{Result, Window},
 };
 
-fn main() {
-    let mut window = Window::create("Simple window", 800, 600).unwrap();
+fn main() -> Result {
+    let mut window = Window::create("Simple window", 800, 600)?;
     'running: loop {
         while let Some(event) = window.poll_event() {
             println!("{:?}", event);
@@ -16,4 +16,5 @@ fn main() {
             }
         }
     }
+    Ok(())
 }
