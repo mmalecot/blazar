@@ -36,7 +36,7 @@ blazar = "0.1"
 
 Opens an empty window and prints events to stdout.
 
-```bash
+```sh
 cargo run --example window
 ```
 
