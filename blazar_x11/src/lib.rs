@@ -16,6 +16,9 @@ pub type XID = c_ulong;
 
 // Opaque structures
 pub enum Display {}
+pub enum XClassHint {}
+pub enum XSizeHints {}
+pub enum XWMHints {}
 
 // Structures
 #[derive(Clone, Copy)]
@@ -134,6 +137,8 @@ pub const ClientMessage: c_int = 33;
 
 pub const FALSE: Bool = 0;
 
+pub const PropModeReplace: c_int = 0;
+
 pub const XK_space: KeySym = 0x020;
 pub const XK_apostrophe: KeySym = 0x027;
 pub const XK_comma: KeySym = 0x02c;
@@ -245,6 +250,16 @@ library! {
     struct X11Library {
         fn XBlackPixel(display: *mut Display, screen_number: c_int) -> c_ulong;
         fn XCloseDisplay(display: *mut Display) -> c_int;
+        fn XChangeProperty(
+            display: *mut Display,
+            w: c_ulong,
+            property: c_ulong,
+            r#type: c_ulong,
+            format: c_int,
+            mode: c_int,
+            data: *const c_uchar,
+            nelements: c_int
+        ) -> c_int;
         fn XCreateSimpleWindow(
             display: *mut Display,
             parent: Window,
@@ -259,6 +274,7 @@ library! {
         fn XDefaultRootWindow(display: *mut Display) -> Window;
         fn XDefaultScreen(display: *mut Display) -> c_int;
         fn XDestroyWindow(display: *mut Display, window: Window) -> c_int;
+        fn XFlush(display: *mut Display) -> c_int;
         fn XInternAtom(
             display: *mut Display,
             atom_name: *const c_char,
@@ -277,6 +293,16 @@ library! {
             protocols: *mut Atom,
             count: c_int
         ) -> Status;
-        fn XStoreName(display: *mut Display, w: Window, window_name: *const c_char) -> c_int;
+        fn Xutf8SetWMProperties(
+            display: *mut Display,
+            w: c_ulong,
+            window_name: *const c_char,
+            icon_name: *const c_char,
+            argv: *mut *mut c_char,
+            argc: c_int,
+            normal_hints: *mut XSizeHints,
+            wm_hints: *mut XWMHints,
+            class_hints: *mut XClassHint
+        ) -> c_void;
     }
 }
