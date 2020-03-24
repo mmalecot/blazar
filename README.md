@@ -32,12 +32,12 @@ blazar = "0.1"
 
 ## Examples
 
-### Window
+### Simple window
 
 Opens an empty window and prints events to stdout.
 
 ```sh
-cargo run --example window
+cargo run --example simple_window
 ```
 
 ## Workspace
