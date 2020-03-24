@@ -7,7 +7,7 @@ use std::{
     collections::VecDeque,
     ffi::CString,
     mem,
-    os::raw::{c_int, c_uint},
+    os::raw::{c_int, c_uchar, c_uint},
     ptr,
 };
 
@@ -69,8 +69,45 @@ impl Window {
             );
 
             // Sets window's title.
+            let utf8_string = CString::new("UTF8_STRING").unwrap();
+            let utf8_string = x11.XInternAtom(display, utf8_string.as_ptr(), x11::FALSE);
+            let net_wm_name = CString::new("_NET_WM_NAME").unwrap();
+            let net_wm_name = x11.XInternAtom(display, net_wm_name.as_ptr(), x11::FALSE);
+            let net_wm_icon_name = CString::new("_NET_WM_ICON_NAME").unwrap();
+            let net_wm_icon_name = x11.XInternAtom(display, net_wm_icon_name.as_ptr(), x11::FALSE);
             let title = CString::new(title).unwrap();
-            x11.XStoreName(display, handle, title.as_ptr());
+            x11.Xutf8SetWMProperties(
+                display,
+                handle,
+                title.as_ptr(),
+                title.as_ptr(),
+                ptr::null_mut(),
+                0,
+                ptr::null_mut(),
+                ptr::null_mut(),
+                ptr::null_mut(),
+            );
+            x11.XChangeProperty(
+                display,
+                handle,
+                net_wm_name,
+                utf8_string,
+                8,
+                x11::PropModeReplace,
+                title.as_ptr() as *const c_uchar,
+                title.as_bytes().len() as c_int,
+            );
+            x11.XChangeProperty(
+                display,
+                handle,
+                net_wm_icon_name,
+                utf8_string,
+                8,
+                x11::PropModeReplace,
+                title.as_ptr() as *const c_uchar,
+                title.as_bytes().len() as c_int,
+            );
+            x11.XFlush(display);
 
             // Handles WM delete window (close button).
             let wm_protocols = CString::new("WM_PROTOCOLS").unwrap();
