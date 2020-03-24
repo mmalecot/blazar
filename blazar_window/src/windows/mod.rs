@@ -33,7 +33,7 @@ impl Window {
             }
 
             // Registers the window class.
-            let class_name = wide_string(concat!(env!("CARGO_PKG_NAME"), "_window"));
+            let class_name = wide_string(env!("CARGO_PKG_NAME"));
             let mut class: win32::WNDCLASSW = mem::zeroed();
             class.style = win32::CS_HREDRAW | win32::CS_VREDRAW;
             class.lpfnWndProc = mem::transmute::<
@@ -108,14 +108,14 @@ impl Window {
     /// Updates the event queue.
     fn update_event_queue(&mut self) {
         unsafe {
+            let window = wide_string("window");
+            win32::SetPropW(
+                self.handle,
+                window.as_ptr(),
+                self as *mut Window as *mut c_void,
+            );
             let mut message: win32::MSG = mem::zeroed();
             while win32::PeekMessageW(&mut message, self.handle, 0, 0, win32::PM_REMOVE) > 0 {
-                let window = wide_string("Window");
-                win32::SetPropW(
-                    self.handle,
-                    window.as_ptr(),
-                    self as *mut Window as *mut c_void,
-                );
                 win32::TranslateMessage(&message);
                 win32::DispatchMessageW(&message);
             }
@@ -129,102 +129,15 @@ impl Window {
         w_param: win32::WPARAM,
         l_param: win32::LPARAM,
     ) -> win32::LRESULT {
-        let window = wide_string("Window");
+        let window = wide_string("window");
         let window = win32::GetPropW(handle, window.as_ptr()) as *mut Window;
-        if let Some(event) = (*window).translate_event(message, w_param, l_param) {
-            (*window).events.push_back(event);
-            0
-        } else {
-            win32::DefWindowProcW(handle, message, w_param, l_param)
-        }
-    }
-
-    /// Translates an event message into `Option<Event>`.
-    unsafe fn translate_event(
-        &self,
-        message: win32::UINT,
-        w_param: win32::WPARAM,
-        l_param: win32::LPARAM,
-    ) -> Option<Event> {
-        match message {
-            // Window
-            win32::WM_CLOSE => Some(Event::Close),
-            win32::WM_SETFOCUS => Some(Event::GainFocus),
-            win32::WM_KILLFOCUS => Some(Event::LoseFocus),
-            win32::WM_SIZE => Some(Event::Resize {
-                width: u32::from(win32::LOWORD(l_param as win32::DWORD)),
-                height: u32::from(win32::HIWORD(l_param as win32::DWORD)),
-            }),
-            // Keyboard
-            win32::WM_KEYDOWN | win32::WM_SYSKEYDOWN
-                if win32::HIWORD(l_param as win32::DWORD) & win32::KF_REPEAT == 0 =>
-            {
-                translate_key(w_param, l_param).map(|key| Event::KeyPress { key })
+        if !window.is_null() {
+            if let Some(event) = translate_event(message, w_param, l_param) {
+                (*window).events.push_back(event);
+                return 0;
             }
-            win32::WM_KEYUP | win32::WM_SYSKEYUP => {
-                translate_key(w_param, l_param).map(|key| Event::KeyRelease { key })
-            }
-            // Mouse
-            win32::WM_MOUSEWHEEL => Some(if win32::GET_WHEEL_DELTA_WPARAM(w_param) > 0 {
-                Event::MouseScrollUp
-            } else {
-                Event::MouseScrollDown
-            }),
-            win32::WM_MOUSEMOVE => Some(Event::MouseMove {
-                x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
-                y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
-            }),
-            win32::WM_LBUTTONDOWN => Some(Event::MouseButtonPress {
-                button: Button::Left,
-                x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
-                y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
-            }),
-            win32::WM_LBUTTONUP => Some(Event::MouseButtonRelease {
-                button: Button::Left,
-                x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
-                y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
-            }),
-            win32::WM_MBUTTONDOWN => Some(Event::MouseButtonPress {
-                button: Button::Middle,
-                x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
-                y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
-            }),
-            win32::WM_MBUTTONUP => Some(Event::MouseButtonRelease {
-                button: Button::Middle,
-                x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
-                y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
-            }),
-            win32::WM_RBUTTONDOWN => Some(Event::MouseButtonPress {
-                button: Button::Right,
-                x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
-                y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
-            }),
-            win32::WM_RBUTTONUP => Some(Event::MouseButtonRelease {
-                button: Button::Right,
-                x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
-                y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
-            }),
-            win32::WM_XBUTTONDOWN => Some(Event::MouseButtonPress {
-                button: if win32::GET_XBUTTON_WPARAM(w_param) == win32::XBUTTON1 {
-                    Button::Back
-                } else {
-                    Button::Forward
-                },
-                x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
-                y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
-            }),
-            win32::WM_XBUTTONUP => Some(Event::MouseButtonRelease {
-                button: if win32::GET_XBUTTON_WPARAM(w_param) == win32::XBUTTON1 {
-                    Button::Back
-                } else {
-                    Button::Forward
-                },
-                x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
-                y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
-            }),
-            // Unknown
-            _ => None,
         }
+        win32::DefWindowProcW(handle, message, w_param, l_param)
     }
 }
 
@@ -234,6 +147,93 @@ impl Drop for Window {
             win32::DestroyWindow(self.handle);
             win32::UnregisterClassW(self.class_name.as_ptr(), self.instance);
         }
+    }
+}
+
+/// Translates an event message into `Option<Event>`.
+unsafe fn translate_event(
+    message: win32::UINT,
+    w_param: win32::WPARAM,
+    l_param: win32::LPARAM,
+) -> Option<Event> {
+    match message {
+        // Window
+        win32::WM_CLOSE => Some(Event::Close),
+        win32::WM_SETFOCUS => Some(Event::GainFocus),
+        win32::WM_KILLFOCUS => Some(Event::LoseFocus),
+        win32::WM_SIZE => Some(Event::Resize {
+            width: u32::from(win32::LOWORD(l_param as win32::DWORD)),
+            height: u32::from(win32::HIWORD(l_param as win32::DWORD)),
+        }),
+        // Keyboard
+        win32::WM_KEYDOWN | win32::WM_SYSKEYDOWN
+            if win32::HIWORD(l_param as win32::DWORD) & win32::KF_REPEAT == 0 =>
+        {
+            translate_key(w_param, l_param).map(|key| Event::KeyPress { key })
+        }
+        win32::WM_KEYUP | win32::WM_SYSKEYUP => {
+            translate_key(w_param, l_param).map(|key| Event::KeyRelease { key })
+        }
+        // Mouse
+        win32::WM_MOUSEWHEEL => Some(if win32::GET_WHEEL_DELTA_WPARAM(w_param) > 0 {
+            Event::MouseScrollUp
+        } else {
+            Event::MouseScrollDown
+        }),
+        win32::WM_MOUSEMOVE => Some(Event::MouseMove {
+            x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
+            y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
+        }),
+        win32::WM_LBUTTONDOWN => Some(Event::MouseButtonPress {
+            button: Button::Left,
+            x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
+            y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
+        }),
+        win32::WM_LBUTTONUP => Some(Event::MouseButtonRelease {
+            button: Button::Left,
+            x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
+            y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
+        }),
+        win32::WM_MBUTTONDOWN => Some(Event::MouseButtonPress {
+            button: Button::Middle,
+            x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
+            y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
+        }),
+        win32::WM_MBUTTONUP => Some(Event::MouseButtonRelease {
+            button: Button::Middle,
+            x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
+            y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
+        }),
+        win32::WM_RBUTTONDOWN => Some(Event::MouseButtonPress {
+            button: Button::Right,
+            x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
+            y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
+        }),
+        win32::WM_RBUTTONUP => Some(Event::MouseButtonRelease {
+            button: Button::Right,
+            x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
+            y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
+        }),
+        win32::WM_XBUTTONDOWN => Some(Event::MouseButtonPress {
+            button: if win32::GET_XBUTTON_WPARAM(w_param) == win32::XBUTTON1 {
+                Button::Back
+            } else {
+                Button::Forward
+            },
+            x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
+            y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
+        }),
+        win32::WM_XBUTTONUP => Some(Event::MouseButtonRelease {
+            button: if win32::GET_XBUTTON_WPARAM(w_param) == win32::XBUTTON1 {
+                Button::Back
+            } else {
+                Button::Forward
+            },
+            x: i32::from(win32::LOWORD(l_param as win32::DWORD)),
+            y: i32::from(win32::HIWORD(l_param as win32::DWORD)),
+        }),
+        // Unknown
+        _ => None,
     }
 }
 
