@@ -254,6 +254,7 @@ fn translate_key(symbol: x11::KeySym) -> Option<Key> {
     Some(match symbol {
         // Typing
         x11::XK_A => Key::A,
+        x11::XK_B => Key::B,
         x11::XK_C => Key::C,
         x11::XK_D => Key::D,
         x11::XK_E => Key::E,
