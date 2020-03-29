@@ -2,13 +2,24 @@
 
 pub use blazar_win32 as win32;
 
+/// Returns a library filename.
+#[macro_export]
+macro_rules! filename {
+    ($lib_name:literal) => {
+        concat!($lib_name, ".dll")
+    };
+    ($lib_name:literal, $lib_version:literal) => {
+        concat!($lib_name, "-", $lib_version, ".dll")
+    };
+}
+
 /// Creates a structure that wraps the functions of a library.
 #[macro_export]
 macro_rules! library {
     {
-        #[load(name = $lib_name:literal)]
+        #[load(name = $lib_name:literal $(,version = $lib_version:literal)?)]
         struct $struct_name:ident {
-            $(fn $fn_name:ident ($($param_name:ident : $param_type:ty),*) -> $ret_type:ty;)*
+            $(fn $fn_name:ident($($param_name:ident: $param_type:ty),*) -> $ret_type:ty;)*
         }
     } => {
         /// Library wrapper.
@@ -23,7 +34,7 @@ macro_rules! library {
             /// Loads the library.
             pub fn load() -> blazar_library::Result<$struct_name> {
                 unsafe {
-                    let filename = std::ffi::CString::new(concat!($lib_name, ".dll")).unwrap();
+                    let filename = std::ffi::CString::new(blazar_library::filename!($lib_name $(,$lib_version)?)).unwrap();
                     let handle = win32::LoadLibraryA(filename.as_ptr());
                     if handle.is_null() {
                         Err(blazar_library::LibraryError::LoadLibraryError)
