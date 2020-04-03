@@ -30,6 +30,42 @@ blazar = "1.0.0-dev.1"
 * [Windows API Index](https://docs.microsoft.com/en-us/windows/win32/apiindex/windows-api-list)
 * [Vulkan overview](https://www.khronos.org/vulkan/)
 
+## Native dependencies
+
+**Blazar** only requires basic dependencies.
+
+### Linux
+
+Xlib, Vulkan ICD loader and Vulkan drivers for your graphics card are required.
+
+#### Arch Linux
+
+```sh
+pacman -Syu libx11 vulkan-icd-loader
+```
+
+For Intel graphics card:
+
+```sh
+pacman -Syu vulkan-intel
+```
+
+For NVIDIA graphics card:
+
+```sh
+pacman -Syu nvidia-utils
+```
+
+For AMD graphics card:
+
+```sh
+pacman -Syu vulkan-radeon
+```
+
+### Windows
+
+Only Vulkan drivers for your graphics card are required.
+
 ## Examples
 
 ### Simple window
