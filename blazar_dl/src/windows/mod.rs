@@ -19,7 +19,7 @@ macro_rules! _library_filename {
 #[macro_export]
 macro_rules! _handle_type {
     () => {
-        winapi::HMODULE
+        blazar_dl::winapi::HMODULE
     };
 }
 
