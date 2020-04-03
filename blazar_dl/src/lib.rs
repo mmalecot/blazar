@@ -21,3 +21,63 @@ mod linux;
 
 #[cfg(target_os = "linux")]
 pub use linux::*;
+
+/// Creates a structure that wraps the functions of a library.
+#[macro_export]
+macro_rules! library {
+    {
+        #[load(name = $lib_name:literal $(,version = $lib_version:literal)?)]
+        pub struct $struct_name:ident {
+            $(fn $fn_name:ident($($param_name:ident: $param_type:ty),*) -> $ret_type:ty;)*
+        }
+    } => {
+        /// Library wrapper.
+        pub struct $struct_name {
+            handle: blazar_dl::_handle_type!(),
+            $(
+                $fn_name: unsafe extern "C" fn($($param_type),*) -> $ret_type,
+            )*
+        }
+
+        impl $struct_name {
+            /// Loads the library.
+            pub fn load() -> blazar_dl::Result<$struct_name> {
+                unsafe {
+                    let handle = blazar_dl::_load_library!(blazar_dl::_library_filename!($lib_name $(,$lib_version)?));
+                    if handle.is_null() {
+                        Err(blazar_dl::DynamicLoadingError::LoadLibraryError)
+                    }
+                    else {
+                        $(
+                            let $fn_name = blazar_dl::_load_function!(handle, $fn_name);
+                            if $fn_name.is_null() {
+                                return Err(blazar_dl::DynamicLoadingError::LoadFunctionError);
+                            }
+                        )*
+                        Ok($struct_name {
+                            handle,
+                            $(
+                                $fn_name: std::mem::transmute($fn_name),
+                            )*
+                        })
+                    }
+                }
+            }
+
+            $(
+                #[inline]
+                pub unsafe fn $fn_name(&self, $($param_name: $param_type),*) -> $ret_type {
+                    (self.$fn_name)($($param_name),*)
+                }
+            )*
+        }
+
+        impl Drop for $struct_name {
+            fn drop(&mut self) {
+                unsafe {
+                    blazar_dl::_unload_library!(self.handle);
+                }
+            }
+        }
+    };
+}

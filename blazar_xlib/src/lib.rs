@@ -247,7 +247,7 @@ pub const XK_Delete: KeySym = 0xffff;
 // Functions
 library! {
     #[load(name = "X11")]
-    struct X11Library {
+    pub struct X11Library {
         fn XBlackPixel(display: *mut Display, screen_number: c_int) -> c_ulong;
         fn XCloseDisplay(display: *mut Display) -> c_int;
         fn XChangeProperty(
