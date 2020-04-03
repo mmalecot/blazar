@@ -51,6 +51,7 @@ macro_rules! library {
                         $(
                             let $fn_name = blazar_dl::_load_function!(handle, $fn_name);
                             if $fn_name.is_null() {
+                                blazar_dl::_unload_library!(handle);
                                 return Err(blazar_dl::DynamicLoadingError::LoadFunctionError);
                             }
                         )*
