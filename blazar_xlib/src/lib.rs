@@ -2,7 +2,7 @@
 
 #![allow(clippy::too_many_arguments, non_snake_case, non_upper_case_globals)]
 
-use blazar_dl::library;
+use blazar_dl::dynamic_loading;
 use std::os::raw::*;
 
 // Types
@@ -245,7 +245,12 @@ pub const XK_Super_R: KeySym = 0xffec;
 pub const XK_Delete: KeySym = 0xffff;
 
 // Functions
-library! {
+dynamic_loading! {
+    pub enum X11DynamicLoadingError {
+        LoadLibraryError,
+        LoadFunctionError,
+    }
+
     #[load(name = "X11")]
     pub struct X11Library {
         fn XBlackPixel(display: *mut Display, screen_number: c_int) -> c_ulong;

@@ -13,7 +13,7 @@ use std::{
 
 /// Represents a window.
 pub struct Window {
-    x11: xlib::X11Library,
+    x11: xlib::dl::X11Library,
     display: *mut xlib::Display,
     handle: xlib::Window,
     wm_protocols: xlib::Atom,
@@ -28,7 +28,7 @@ impl Window {
     pub fn create(title: &str, width: u32, height: u32) -> Result<Window> {
         unsafe {
             // Loads Xlib.
-            let x11 = xlib::X11Library::load().map_err(|_| WindowError::CreateWindowError)?;
+            let x11 = xlib::dl::X11Library::load().map_err(|_| WindowError::CreateWindowError)?;
 
             // Opens X Display.
             let display = x11.XOpenDisplay(ptr::null());
