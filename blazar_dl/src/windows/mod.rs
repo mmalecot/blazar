@@ -47,7 +47,7 @@ macro_rules! _load_function {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! _unload_library {
-    ($handle:expr) => {{
+    ($handle:expr) => {
         blazar_dl::winapi::FreeLibrary($handle);
-    }};
+    };
 }
