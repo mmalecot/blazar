@@ -3,7 +3,8 @@
 /// Kinds of window errors.
 #[derive(Debug)]
 pub enum WindowError {
-    CreateWindowError,
+    ContextCreation(String),
+    WindowCreation,
 }
 
 /// Convenient result type consisting of a return type and a `WindowError`.

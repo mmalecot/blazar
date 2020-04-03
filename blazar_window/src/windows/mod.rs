@@ -15,26 +15,27 @@ use std::{
     ptr,
 };
 
-/// Represents a window.
-pub struct Window {
+/// Represents an object that holds on to global resources.
+pub(crate) struct Context {
     _vk: vk_dl::VulkanLibrary,
     instance: winapi::HMODULE,
-    handle: winapi::HWND,
     class_name: Vec<winapi::WCHAR>,
-    events: VecDeque<Event>,
 }
 
-impl Window {
-    /// Creates a new window.
-    pub fn create(title: &str, width: u32, height: u32) -> Result<Window> {
+impl Context {
+    fn create() -> Result<Context> {
         unsafe {
-            // Loads Vulkan.
-            let _vk = vk_dl::VulkanLibrary::load().map_err(|_| WindowError::CreateWindowError)?;
+            // Loads Vulkan library.
+            let _vk = vk_dl::VulkanLibrary::load().map_err(|_| {
+                WindowError::ContextCreation(String::from("Cannot load Vulkan library"))
+            })?;
 
             // Retrieves a module handle.
             let instance = winapi::GetModuleHandleW(ptr::null());
             if instance.is_null() {
-                return Err(WindowError::CreateWindowError);
+                return Err(WindowError::ContextCreation(String::from(
+                    "Cannot retrieve a module handle",
+                )));
             }
 
             // Registers the window class.
@@ -55,11 +56,43 @@ impl Window {
             class.hInstance = instance;
             class.lpszClassName = class_name.as_ptr();
             if winapi::RegisterClassW(&class) == 0 {
-                return Err(WindowError::CreateWindowError);
+                return Err(WindowError::ContextCreation(String::from(
+                    "Cannot register the window class",
+                )));
             }
 
+            Ok(Context {
+                _vk,
+                instance,
+                class_name,
+            })
+        }
+    }
+}
+
+impl Drop for Context {
+    fn drop(&mut self) {
+        unsafe {
+            winapi::UnregisterClassW(self.class_name.as_ptr(), self.instance);
+        }
+    }
+}
+
+/// Represents a window.
+pub struct Window {
+    _context: Context,
+    handle: winapi::HWND,
+    events: VecDeque<Event>,
+}
+
+impl Window {
+    /// Creates a new window.
+    pub fn create(title: &str, width: u32, height: u32) -> Result<Window> {
+        unsafe {
+            // Creates context.
+            let _context = Context::create()?;
+
             // Creates the window.
-            let title = wide_string(&title);
             let mut rectangle = winapi::RECT {
                 left: 0,
                 top: 0,
@@ -73,9 +106,10 @@ impl Window {
             );
             let width = rectangle.right - rectangle.left;
             let height = rectangle.bottom - rectangle.top;
+            let title = wide_string(&title);
             let handle = winapi::CreateWindowExW(
                 0,
-                class_name.as_ptr(),
+                _context.class_name.as_ptr(),
                 title.as_ptr(),
                 winapi::WS_OVERLAPPEDWINDOW | winapi::WS_VISIBLE,
                 winapi::CW_USEDEFAULT,
@@ -84,22 +118,19 @@ impl Window {
                 height as c_int,
                 ptr::null_mut(),
                 ptr::null_mut(),
-                instance,
+                _context.instance,
                 ptr::null_mut(),
             );
             if handle.is_null() {
-                winapi::UnregisterClassW(class_name.as_ptr(), instance);
-                return Err(WindowError::CreateWindowError);
+                return Err(WindowError::WindowCreation);
             }
 
             // Creates event queue.
             let events = VecDeque::new();
 
             Ok(Window {
-                _vk,
-                instance,
+                _context,
                 handle,
-                class_name,
                 events,
             })
         }
@@ -151,7 +182,6 @@ impl Drop for Window {
     fn drop(&mut self) {
         unsafe {
             winapi::DestroyWindow(self.handle);
-            winapi::UnregisterClassW(self.class_name.as_ptr(), self.instance);
         }
     }
 }

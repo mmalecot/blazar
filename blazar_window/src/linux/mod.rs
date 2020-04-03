@@ -13,14 +13,76 @@ use std::{
     ptr,
 };
 
+/// Represents an object that holds on to global resources.
+pub(crate) struct Context {
+    pub(crate) x11: xlib_dl::X11Library,
+    pub(crate) _vk: vk_dl::VulkanLibrary,
+    pub(crate) display: *mut xlib::Display,
+    pub(crate) wm_protocols: xlib::Atom,
+    pub(crate) wm_delete_window: xlib::Atom,
+    pub(crate) utf8_string: xlib::Atom,
+    pub(crate) net_wm_name: xlib::Atom,
+    pub(crate) net_wm_icon_name: xlib::Atom,
+}
+
+impl Context {
+    fn create() -> Result<Context> {
+        unsafe {
+            // Loads Xlib.
+            let x11 = xlib_dl::X11Library::load()
+                .map_err(|_| WindowError::ContextCreation(String::from("Cannot load Xlib")))?;
+
+            // Loads Vulkan library.
+            let _vk = vk_dl::VulkanLibrary::load().map_err(|_| {
+                WindowError::ContextCreation(String::from("Cannot load Vulkan library"))
+            })?;
+
+            // Opens X display.
+            let display = x11.XOpenDisplay(ptr::null());
+            if display.is_null() {
+                return Err(WindowError::ContextCreation(String::from(
+                    "Cannot open X display",
+                )));
+            }
+
+            // Loads X atoms.
+            let wm_protocols = CString::new("WM_PROTOCOLS").unwrap();
+            let wm_protocols = x11.XInternAtom(display, wm_protocols.as_ptr(), xlib::FALSE);
+            let wm_delete_window = CString::new("WM_DELETE_WINDOW").unwrap();
+            let wm_delete_window = x11.XInternAtom(display, wm_delete_window.as_ptr(), xlib::FALSE);
+            let utf8_string = CString::new("UTF8_STRING").unwrap();
+            let utf8_string = x11.XInternAtom(display, utf8_string.as_ptr(), xlib::FALSE);
+            let net_wm_name = CString::new("_NET_WM_NAME").unwrap();
+            let net_wm_name = x11.XInternAtom(display, net_wm_name.as_ptr(), xlib::FALSE);
+            let net_wm_icon_name = CString::new("_NET_WM_ICON_NAME").unwrap();
+            let net_wm_icon_name = x11.XInternAtom(display, net_wm_icon_name.as_ptr(), xlib::FALSE);
+
+            Ok(Context {
+                x11,
+                _vk,
+                display,
+                wm_protocols,
+                wm_delete_window,
+                utf8_string,
+                net_wm_name,
+                net_wm_icon_name,
+            })
+        }
+    }
+}
+
+impl Drop for Context {
+    fn drop(&mut self) {
+        unsafe {
+            self.x11.XCloseDisplay(self.display);
+        }
+    }
+}
+
 /// Represents a window.
 pub struct Window {
-    x11: xlib_dl::X11Library,
-    _vk: vk_dl::VulkanLibrary,
-    display: *mut xlib::Display,
+    context: Context,
     handle: xlib::Window,
-    wm_protocols: xlib::Atom,
-    wm_delete_window: xlib::Atom,
     width: u32,
     height: u32,
     events: VecDeque<Event>,
@@ -30,39 +92,29 @@ impl Window {
     /// Creates a new window.
     pub fn create(title: &str, width: u32, height: u32) -> Result<Window> {
         unsafe {
-            // Loads Xlib.
-            let x11 = xlib_dl::X11Library::load().map_err(|_| WindowError::CreateWindowError)?;
-
-            // Loads Vulkan.
-            let _vk = vk_dl::VulkanLibrary::load().map_err(|_| WindowError::CreateWindowError)?;
-
-            // Opens X Display.
-            let display = x11.XOpenDisplay(ptr::null());
-            if display.is_null() {
-                return Err(WindowError::CreateWindowError);
-            }
+            // Creates context.
+            let context = Context::create()?;
 
             // Creates the window.
-            let default_screen = x11.XDefaultScreen(display);
-            let handle = x11.XCreateSimpleWindow(
-                display,
-                x11.XDefaultRootWindow(display),
+            let default_screen = context.x11.XDefaultScreen(context.display);
+            let handle = context.x11.XCreateSimpleWindow(
+                context.display,
+                context.x11.XDefaultRootWindow(context.display),
                 0,
                 0,
                 width,
                 height,
                 1,
-                x11.XBlackPixel(display, default_screen),
-                x11.XBlackPixel(display, default_screen),
+                context.x11.XBlackPixel(context.display, default_screen),
+                context.x11.XBlackPixel(context.display, default_screen),
             );
             if handle == 0 {
-                x11.XCloseDisplay(display);
-                return Err(WindowError::CreateWindowError);
+                return Err(WindowError::WindowCreation);
             }
 
             // Selects input events.
-            x11.XSelectInput(
-                display,
+            context.x11.XSelectInput(
+                context.display,
                 handle,
                 xlib::ButtonPressMask
                     | xlib::ButtonReleaseMask
@@ -75,15 +127,9 @@ impl Window {
             );
 
             // Sets window's title.
-            let utf8_string = CString::new("UTF8_STRING").unwrap();
-            let utf8_string = x11.XInternAtom(display, utf8_string.as_ptr(), xlib::FALSE);
-            let net_wm_name = CString::new("_NET_WM_NAME").unwrap();
-            let net_wm_name = x11.XInternAtom(display, net_wm_name.as_ptr(), xlib::FALSE);
-            let net_wm_icon_name = CString::new("_NET_WM_ICON_NAME").unwrap();
-            let net_wm_icon_name = x11.XInternAtom(display, net_wm_icon_name.as_ptr(), xlib::FALSE);
             let title = CString::new(title).unwrap();
-            x11.Xutf8SetWMProperties(
-                display,
+            context.x11.Xutf8SetWMProperties(
+                context.display,
                 handle,
                 title.as_ptr(),
                 title.as_ptr(),
@@ -93,54 +139,46 @@ impl Window {
                 ptr::null_mut(),
                 ptr::null_mut(),
             );
-            x11.XChangeProperty(
-                display,
+            context.x11.XChangeProperty(
+                context.display,
                 handle,
-                net_wm_name,
-                utf8_string,
+                context.net_wm_name,
+                context.utf8_string,
                 8,
                 xlib::PropModeReplace,
                 title.as_ptr() as *const c_uchar,
                 title.as_bytes().len() as c_int,
             );
-            x11.XChangeProperty(
-                display,
+            context.x11.XChangeProperty(
+                context.display,
                 handle,
-                net_wm_icon_name,
-                utf8_string,
+                context.net_wm_icon_name,
+                context.utf8_string,
                 8,
                 xlib::PropModeReplace,
                 title.as_ptr() as *const c_uchar,
                 title.as_bytes().len() as c_int,
             );
-            x11.XFlush(display);
+            context.x11.XFlush(context.display);
 
             // Handles WM delete window (close button).
-            let wm_protocols = CString::new("WM_PROTOCOLS").unwrap();
-            let wm_protocols = x11.XInternAtom(display, wm_protocols.as_ptr(), xlib::FALSE);
-            let wm_delete_window = CString::new("WM_DELETE_WINDOW").unwrap();
-            let wm_delete_window = x11.XInternAtom(display, wm_delete_window.as_ptr(), xlib::FALSE);
-            let mut protocols = [wm_delete_window];
-            x11.XSetWMProtocols(
-                display,
+            let mut protocols = [context.wm_delete_window];
+            context.x11.XSetWMProtocols(
+                context.display,
                 handle,
                 protocols.as_mut_ptr(),
                 protocols.len() as c_int,
             );
 
             // Maps window to the root window.
-            x11.XMapWindow(display, handle);
+            context.x11.XMapWindow(context.display, handle);
 
             // Creates event queue.
             let events = VecDeque::new();
 
             Ok(Window {
-                x11,
-                _vk,
-                display,
+                context,
                 handle,
-                wm_protocols,
-                wm_delete_window,
                 width,
                 height,
                 events,
@@ -157,9 +195,11 @@ impl Window {
     /// Updates the event queue.
     fn update_event_queue(&mut self) {
         unsafe {
-            while self.x11.XPending(self.display) > 0 {
+            while self.context.x11.XPending(self.context.display) > 0 {
                 let mut event: xlib::XEvent = mem::zeroed();
-                self.x11.XNextEvent(self.display, &mut event);
+                self.context
+                    .x11
+                    .XNextEvent(self.context.display, &mut event);
                 if let Some(event) = self.translate_event(&mut event) {
                     self.events.push_back(event)
                 }
@@ -172,9 +212,9 @@ impl Window {
         match event.r#type {
             // Window
             xlib::ClientMessage
-                if event.client_message.message_type == self.wm_protocols
+                if event.client_message.message_type == self.context.wm_protocols
                     && event.client_message.data.longs[0] as xlib::Atom
-                        == self.wm_delete_window =>
+                        == self.context.wm_delete_window =>
             {
                 Some(Event::Close)
             }
@@ -197,14 +237,18 @@ impl Window {
                 .map(|key| Event::KeyPress { key }),
             xlib::KeyRelease => {
                 // Ignores auto-repeat.
-                if self.x11.XPending(self.display) > 0 {
+                if self.context.x11.XPending(self.context.display) > 0 {
                     let mut next_event: xlib::XEvent = mem::zeroed();
-                    self.x11.XPeekEvent(self.display, &mut next_event);
+                    self.context
+                        .x11
+                        .XPeekEvent(self.context.display, &mut next_event);
                     if next_event.r#type == xlib::KeyPress
                         && next_event.key.keycode == event.key.keycode
                         && next_event.key.time - event.key.time < 20
                     {
-                        self.x11.XNextEvent(self.display, &mut next_event);
+                        self.context
+                            .x11
+                            .XNextEvent(self.context.display, &mut next_event);
                         return None;
                     }
                 }
@@ -240,7 +284,7 @@ impl Window {
     /// Translates an `XKeyEvent` into `Option<Key>`.
     unsafe fn translate_key_event(&mut self, event: &mut xlib::XKeyEvent) -> Option<Key> {
         for index in 0..4 {
-            if let Some(key) = translate_key(self.x11.XLookupKeysym(event, index)) {
+            if let Some(key) = translate_key(self.context.x11.XLookupKeysym(event, index)) {
                 return Some(key);
             }
         }
@@ -251,8 +295,9 @@ impl Window {
 impl Drop for Window {
     fn drop(&mut self) {
         unsafe {
-            self.x11.XDestroyWindow(self.display, self.handle);
-            self.x11.XCloseDisplay(self.display);
+            self.context
+                .x11
+                .XDestroyWindow(self.context.display, self.handle);
         }
     }
 }
