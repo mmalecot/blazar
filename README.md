@@ -49,6 +49,7 @@ The workspace is composed of the following members:
 - `blazar_winapi`: Windows API raw FFI bindings.
 - `blazar_window`: Multi-platform windowing API.
 - `blazar_xlib`: Xlib raw FFI bindings.
+- `blazar_xlib_dl`: Xlib dynamic loading.
 
 ## License
 

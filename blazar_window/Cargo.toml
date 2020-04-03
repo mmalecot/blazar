@@ -9,6 +9,7 @@ repository = "https://github.com/mmalecot/blazar"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 blazar_xlib = { path = "../blazar_xlib" }
+blazar_xlib_dl = { path = "../blazar_xlib_dl" }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 blazar_winapi = { path = "../blazar_winapi" }

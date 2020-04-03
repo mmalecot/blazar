@@ -20,6 +20,7 @@ members = [
     "blazar_libc",
     "blazar_winapi",
     "blazar_xlib",
+    "blazar_xlib_dl",
     # Re-exports
     "blazar_event",
     "blazar_window",

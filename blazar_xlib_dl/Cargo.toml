@@ -1,8 +1,12 @@
 [package]
-name = "blazar_xlib"
+name = "blazar_xlib_dl"
 version = "1.0.0-dev.1"
 authors = ["Mickaël Malécot <mickael.malecot@gmail.com>"]
 edition = "2018"
-description = "Xlib raw FFI bindings"
+description = "Xlib dynamic loading"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/mmalecot/blazar"
+
+[dependencies]
+blazar_xlib = { path = "../blazar_xlib" }
+blazar_dl = { path = "../blazar_dl" }
