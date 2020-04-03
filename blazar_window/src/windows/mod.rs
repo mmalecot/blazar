@@ -2,6 +2,7 @@
 
 use crate::{Result, WindowError};
 use blazar_event::{Button, Event, Key};
+use blazar_vk_dl as vk_dl;
 use blazar_winapi as winapi;
 use std::{
     collections::VecDeque,
@@ -16,6 +17,7 @@ use std::{
 
 /// Represents a window.
 pub struct Window {
+    _vk: vk_dl::VulkanLibrary,
     instance: winapi::HMODULE,
     handle: winapi::HWND,
     class_name: Vec<winapi::WCHAR>,
@@ -26,6 +28,9 @@ impl Window {
     /// Creates a new window.
     pub fn create(title: &str, width: u32, height: u32) -> Result<Window> {
         unsafe {
+            // Loads Vulkan.
+            let _vk = vk_dl::VulkanLibrary::load().map_err(|_| WindowError::CreateWindowError)?;
+
             // Retrieves a module handle.
             let instance = winapi::GetModuleHandleW(ptr::null());
             if instance.is_null() {
@@ -91,6 +96,7 @@ impl Window {
             let events = VecDeque::new();
 
             Ok(Window {
+                _vk,
                 instance,
                 handle,
                 class_name,

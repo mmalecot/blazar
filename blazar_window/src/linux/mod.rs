@@ -2,6 +2,7 @@
 
 use crate::{Result, WindowError};
 use blazar_event::{Button, Event, Key};
+use blazar_vk_dl as vk_dl;
 use blazar_xlib as xlib;
 use blazar_xlib_dl as xlib_dl;
 use std::{
@@ -15,6 +16,7 @@ use std::{
 /// Represents a window.
 pub struct Window {
     x11: xlib_dl::X11Library,
+    _vk: vk_dl::VulkanLibrary,
     display: *mut xlib::Display,
     handle: xlib::Window,
     wm_protocols: xlib::Atom,
@@ -30,6 +32,9 @@ impl Window {
         unsafe {
             // Loads Xlib.
             let x11 = xlib_dl::X11Library::load().map_err(|_| WindowError::CreateWindowError)?;
+
+            // Loads Vulkan.
+            let _vk = vk_dl::VulkanLibrary::load().map_err(|_| WindowError::CreateWindowError)?;
 
             // Opens X Display.
             let display = x11.XOpenDisplay(ptr::null());
@@ -131,6 +136,7 @@ impl Window {
 
             Ok(Window {
                 x11,
+                _vk,
                 display,
                 handle,
                 wm_protocols,

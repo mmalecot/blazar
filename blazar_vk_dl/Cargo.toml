@@ -1,0 +1,12 @@
+[package]
+name = "blazar_vk_dl"
+version = "1.0.0-dev.1"
+authors = ["Mickaël Malécot <mickael.malecot@gmail.com>"]
+edition = "2018"
+description = "Vulkan dynamic loading"
+license = "MIT/Apache-2.0"
+repository = "https://github.com/mmalecot/blazar"
+
+[dependencies]
+blazar_vk = { path = "../blazar_vk" }
+blazar_dl = { path = "../blazar_dl" }

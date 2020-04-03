@@ -16,3 +16,4 @@ blazar_winapi = { path = "../blazar_winapi" }
 
 [dependencies]
 blazar_event = { path = "../blazar_event" }
+blazar_vk_dl = { path = "../blazar_vk_dl" }

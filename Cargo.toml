@@ -18,6 +18,8 @@ members = [
     # Internal
     "blazar_dl",
     "blazar_libc",
+    "blazar_vk",
+    "blazar_vk_dl",
     "blazar_winapi",
     "blazar_xlib",
     "blazar_xlib_dl",
