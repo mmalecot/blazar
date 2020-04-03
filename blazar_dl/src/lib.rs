@@ -16,7 +16,7 @@ pub use linux::*;
 #[macro_export]
 macro_rules! dynamic_loading {
     {
-        pub enum $error_type:ident {
+        pub enum $error_name:ident {
             $load_library_error:ident,
             $load_function_error:ident,
         }
@@ -30,13 +30,13 @@ macro_rules! dynamic_loading {
 
             /// Kinds of dynamic loading errors.
             #[derive(Debug)]
-            pub enum $error_type {
+            pub enum $error_name {
                 $load_library_error,
                 $load_function_error,
             }
 
             /// Convenient result type.
-            pub type Result<T = ()> = std::result::Result<T, $error_type>;
+            pub type Result<T = ()> = std::result::Result<T, $error_name>;
 
             /// Library wrapper.
             pub struct $struct_name {
@@ -52,14 +52,14 @@ macro_rules! dynamic_loading {
                     unsafe {
                         let handle = blazar_dl::_load_library!(blazar_dl::_library_filename!($lib_name $(,$lib_version)?));
                         if handle.is_null() {
-                            Err(crate::dl::$error_type::$load_library_error)
+                            Err(crate::dl::$error_name::$load_library_error)
                         }
                         else {
                             $(
                                 let $fn_name = blazar_dl::_load_function!(handle, $fn_name);
                                 if $fn_name.is_null() {
                                     blazar_dl::_unload_library!(handle);
-                                    return Err(crate::dl::$error_type::$load_function_error);
+                                    return Err(crate::dl::$error_name::$load_function_error);
                                 }
                             )*
                             Ok($struct_name {
