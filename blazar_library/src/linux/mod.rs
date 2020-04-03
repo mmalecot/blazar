@@ -1,4 +1,4 @@
-//! Unix implementation.
+//! Linux implementation.
 
 pub use blazar_dl as dl;
 
