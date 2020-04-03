@@ -1,5 +1,14 @@
 [package]
 name = "blazar_dl"
-version = "0.1.0"
+version = "1.0.0-dev.1"
 authors = ["Mickaël Malécot <mickael.malecot@gmail.com>"]
 edition = "2018"
+description = "Multi-platform dynamic loading API"
+license = "MIT/Apache-2.0"
+repository = "https://github.com/mmalecot/blazar"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+blazar_libc = { path = "../blazar_libc" }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+blazar_winapi = { path = "../blazar_winapi" }

@@ -1,14 +1,17 @@
 [package]
 name = "blazar_window"
-version = "0.1.0"
+version = "1.0.0-dev.1"
 authors = ["Mickaël Malécot <mickael.malecot@gmail.com>"]
 edition = "2018"
+description = "Multi-platform windowing API"
+license = "MIT/Apache-2.0"
+repository = "https://github.com/mmalecot/blazar"
 
-[target.'cfg(target_family = "unix")'.dependencies]
-blazar_x11 = { path = "../blazar_x11" }
+[target.'cfg(target_os = "linux")'.dependencies]
+blazar_xlib = { path = "../blazar_xlib" }
 
-[target.'cfg(target_family = "windows")'.dependencies]
-blazar_win32 = { path = "../blazar_win32" }
+[target.'cfg(target_os = "windows")'.dependencies]
+blazar_winapi = { path = "../blazar_winapi" }
 
 [dependencies]
 blazar_event = { path = "../blazar_event" }

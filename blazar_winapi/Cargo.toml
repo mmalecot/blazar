@@ -1,8 +1,8 @@
 [package]
-name = "blazar_event"
+name = "blazar_winapi"
 version = "1.0.0-dev.1"
 authors = ["Mickaël Malécot <mickael.malecot@gmail.com>"]
 edition = "2018"
-description = "Definition of several types of events"
+description = "Windows API raw FFI bindings"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/mmalecot/blazar"

@@ -1,14 +1,23 @@
-//! libdl FFI.
+//! Multi-platform dynamic loading API.
 
-use std::os::raw::*;
-
-// Constants
-pub const RTLD_LAZY: c_int = 0x0001;
-
-// Functions
-#[link(name = "dl")]
-extern "C" {
-    pub fn dlclose(handle: *mut c_void) -> c_int;
-    pub fn dlopen(filename: *const c_char, flags: c_int) -> *mut c_void;
-    pub fn dlsym(handle: *mut c_void, symbol: *const c_char) -> *mut c_void;
+/// Kinds of dynamic loading errors.
+#[derive(Debug)]
+pub enum DynamicLoadingError {
+    LoadLibraryError,
+    LoadFunctionError,
 }
+
+/// Convenient result type consisting of a return type and a `DynamicLoadingError`.
+pub type Result<T = ()> = std::result::Result<T, DynamicLoadingError>;
+
+#[cfg(target_os = "windows")]
+mod windows;
+
+#[cfg(target_os = "windows")]
+pub use windows::*;
+
+#[cfg(target_os = "linux")]
+mod linux;
+
+#[cfg(target_os = "linux")]
+pub use linux::*;

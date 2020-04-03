@@ -1,8 +1,0 @@
-[package]
-name = "blazar_x11"
-version = "0.1.0"
-authors = ["Mickaël Malécot <mickael.malecot@gmail.com>"]
-edition = "2018"
-
-[dependencies]
-blazar_library = { path = "../blazar_library" }

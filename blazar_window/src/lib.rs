@@ -1,4 +1,4 @@
-//! Provides a multiplatform windowing API.
+//! Multi-platform windowing API.
 
 /// Kinds of window errors.
 #[derive(Debug)]

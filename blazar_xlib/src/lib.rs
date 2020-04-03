@@ -1,8 +1,8 @@
-//! libX11 FFI.
+//! Xlib raw FFI bindings.
 
 #![allow(clippy::too_many_arguments, non_snake_case, non_upper_case_globals)]
 
-use blazar_library::library;
+use blazar_dl::library;
 use std::os::raw::*;
 
 // Types

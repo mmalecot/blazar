@@ -1,6 +1,6 @@
 [package]
 name = "blazar"
-version = "0.1.0"
+version = "1.0.0-dev.1"
 authors = ["Mickaël Malécot <mickael.malecot@gmail.com>"]
 edition = "2018"
 description = "Simple and lite game engine"
@@ -15,12 +15,14 @@ exclude = [".github/*", "examples/*"]
 
 [workspace]
 members = [
+    # Internal
     "blazar_dl",
+    "blazar_libc",
+    "blazar_winapi",
+    "blazar_xlib",
+    # Re-exports
     "blazar_event",
-    "blazar_library",
-    "blazar_win32",
     "blazar_window",
-    "blazar_x11",
 ]
 
 [profile.release]

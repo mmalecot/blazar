@@ -1,4 +1,4 @@
-//! Provides several types of events.
+//! Definition of several types of events.
 
 /// Kinds of events.
 #[derive(Debug)]

@@ -1,4 +1,4 @@
-//! Win32 FFI.
+//! Windows API raw FFI bindings.
 
 #![allow(non_camel_case_types, non_snake_case)]
 
@@ -195,17 +195,12 @@ pub const WS_OVERLAPPEDWINDOW: DWORD =
 pub const XBUTTON1: WORD = 0x0001;
 
 // Functions
-#[cfg(feature = "dynamic_loading")]
 #[link(name = "kernel32")]
 extern "stdcall" {
     pub fn FreeLibrary(hLibModule: HMODULE) -> BOOL;
+    pub fn GetModuleHandleW(lpModuleName: LPCWSTR) -> HMODULE;
     pub fn GetProcAddress(hModule: HMODULE, lpProcName: LPCSTR) -> FARPROC;
     pub fn LoadLibraryA(lpFileName: LPCSTR) -> HMODULE;
-}
-
-#[link(name = "kernel32")]
-extern "stdcall" {
-    pub fn GetModuleHandleW(lpModuleName: LPCWSTR) -> HMODULE;
 }
 
 #[link(name = "user32")]

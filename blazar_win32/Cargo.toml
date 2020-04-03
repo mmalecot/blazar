@@ -1,5 +1,0 @@
-[package]
-name = "blazar_win32"
-version = "0.1.0"
-authors = ["Mickaël Malécot <mickael.malecot@gmail.com>"]
-edition = "2018"

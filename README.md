@@ -11,7 +11,7 @@ Simple and lite game engine focused on:
 - Minimum of dependencies
 - Convenient API
 - Modernity (thanks to the Vulkan graphics API)
-- Multiplatform support (Windows and Linux)
+- Multi-platform support (Windows and Linux)
 
 ## Usage
 
@@ -19,7 +19,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-blazar = "0.1"
+blazar = "1.0.0-dev.1"
 ```
 
 ## References
@@ -43,12 +43,12 @@ cargo run --example simple_window
 ## Workspace
 
 The workspace is composed of the following members:
-- `blazar_dl`: libdl FFI (Unix).
-- `blazar_event`: Provides several types of events.
-- `blazar_library`: Provides a dynamic loading API.
-- `blazar_win32`: Win32 FFI (Windows).
-- `blazar_window`: Provides a multiplatform windowing API.
-- `blazar_x11`: libX11 FFI (Unix).
+- `blazar_dl`: Multi-platform dynamic loading API.
+- `blazar_event`: Definition of several types of events.
+- `blazar_libc`: libc raw FFI bindings.
+- `blazar_winapi`: Windows API raw FFI bindings.
+- `blazar_window`: Multi-platform windowing API.
+- `blazar_xlib`: Xlib raw FFI bindings.
 
 ## License
 

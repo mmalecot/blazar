@@ -1,15 +1,15 @@
-//! Linux implementation.
+//! Windows implementation.
 
-pub use blazar_dl as dl;
+pub use blazar_winapi as winapi;
 
 /// Returns a library filename.
 #[macro_export]
 macro_rules! filename {
     ($lib_name:literal) => {
-        concat!("lib", $lib_name, ".so")
+        concat!($lib_name, ".dll")
     };
     ($lib_name:literal, $lib_version:literal) => {
-        concat!("lib", $lib_name, ".so.", $lib_version)
+        concat!($lib_name, "-", $lib_version, ".dll")
     };
 }
 
@@ -24,7 +24,7 @@ macro_rules! library {
     } => {
         /// Library wrapper.
         pub struct $struct_name {
-            handle: *mut std::os::raw::c_void,
+            handle: winapi::HMODULE,
             $(
                 $fn_name: unsafe extern "C" fn($($param_type),*) -> $ret_type,
             )*
@@ -32,19 +32,19 @@ macro_rules! library {
 
         impl $struct_name {
             /// Loads the library.
-            pub fn load() -> blazar_library::Result<$struct_name> {
+            pub fn load() -> blazar_dl::Result<$struct_name> {
                 unsafe {
-                    let filename = std::ffi::CString::new(blazar_library::filename!($lib_name $(,$lib_version)?)).unwrap();
-                    let handle = blazar_library::dl::dlopen(filename.as_ptr(), blazar_library::dl::RTLD_LAZY);
+                    let filename = std::ffi::CString::new(blazar_dl::filename!($lib_name $(,$lib_version)?)).unwrap();
+                    let handle = winapi::LoadLibraryA(filename.as_ptr());
                     if handle.is_null() {
-                        Err(blazar_library::LibraryError::LoadLibraryError)
+                        Err(blazar_dl::DynamicLoadingError::LoadLibraryError)
                     }
                     else {
                         $(
                             let $fn_name = std::ffi::CString::new(stringify!($fn_name)).unwrap();
-                            let $fn_name = blazar_library::dl::dlsym(handle, $fn_name.as_ptr());
+                            let $fn_name = winapi::GetProcAddress(handle, $fn_name.as_ptr());
                             if $fn_name.is_null() {
-                                return Err(blazar_library::LibraryError::LoadFunctionError);
+                                return Err(blazar_dl::DynamicLoadingError::LoadFunctionError);
                             }
                         )*
                         Ok($struct_name {
@@ -68,7 +68,7 @@ macro_rules! library {
         impl Drop for $struct_name {
             fn drop(&mut self) {
                 unsafe {
-                    blazar_library::dl::dlclose(self.handle);
+                    winapi::FreeLibrary(self.handle);
                 }
             }
         }
