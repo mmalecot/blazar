@@ -8,8 +8,8 @@ use std::os::raw::*;
 
 dynamic_loading! {
     pub enum VulkanDynamicLoadingError {
-        LoadLibraryError,
-        LoadFunctionError,
+        LibraryLoading,
+        FunctionLoading,
     }
 
     #[load(name = "vulkan", version = 1)]

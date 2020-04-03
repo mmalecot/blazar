@@ -8,8 +8,8 @@ use std::os::raw::*;
 
 dynamic_loading! {
     pub enum X11DynamicLoadingError {
-        LoadLibraryError,
-        LoadFunctionError,
+        LibraryLoading,
+        FunctionLoading,
     }
 
     #[load(name = "X11")]
