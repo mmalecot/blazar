@@ -39,7 +39,7 @@ macro_rules! _load_library {
 macro_rules! _load_function {
     ($handle:expr, $fn_name:ident) => {{
         let $fn_name = std::ffi::CString::new(stringify!($fn_name)).unwrap();
-        blazar_dl::winapi::GetProcAddress($handle, $fn_name.as_ptr());
+        blazar_dl::winapi::GetProcAddress($handle, $fn_name.as_ptr())
     }};
 }
 
