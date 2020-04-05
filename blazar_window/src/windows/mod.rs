@@ -1,6 +1,6 @@
 //! Win32-based windows.
 
-use crate::{Result, WindowError};
+use crate::{CreateWindowError, Result};
 use blazar_event::{Button, Event, Key};
 use blazar_vk_dl as vk_dl;
 use blazar_winapi as winapi;
@@ -27,13 +27,13 @@ impl Context {
         unsafe {
             // Loads Vulkan library.
             let _vk = vk_dl::VulkanLibrary::load().map_err(|_| {
-                WindowError::ContextCreation(String::from("Cannot load Vulkan library"))
+                CreateWindowError::ContextCreationFailed(String::from("Cannot load Vulkan library"))
             })?;
 
             // Retrieves a module handle.
             let instance = winapi::GetModuleHandleW(ptr::null());
             if instance.is_null() {
-                return Err(WindowError::ContextCreation(String::from(
+                return Err(CreateWindowError::ContextCreationFailed(String::from(
                     "Cannot retrieve a module handle",
                 )));
             }
@@ -56,7 +56,7 @@ impl Context {
             class.hInstance = instance;
             class.lpszClassName = class_name.as_ptr();
             if winapi::RegisterClassW(&class) == 0 {
-                return Err(WindowError::ContextCreation(String::from(
+                return Err(CreateWindowError::ContextCreationFailed(String::from(
                     "Cannot register the window class",
                 )));
             }
@@ -122,7 +122,7 @@ impl Window {
                 ptr::null_mut(),
             );
             if handle.is_null() {
-                return Err(WindowError::WindowCreation);
+                return Err(CreateWindowError::WindowCreationFailed);
             }
 
             // Creates event queue.

@@ -1,6 +1,6 @@
 //! Xlib-based windows.
 
-use crate::{Result, WindowError};
+use crate::{CreateWindowError, Result};
 use blazar_event::{Button, Event, Key};
 use blazar_vk_dl as vk_dl;
 use blazar_xlib as xlib;
@@ -29,18 +29,19 @@ impl Context {
     fn create() -> Result<Context> {
         unsafe {
             // Loads Xlib.
-            let x11 = xlib_dl::X11Library::load()
-                .map_err(|_| WindowError::ContextCreation(String::from("Cannot load Xlib")))?;
+            let x11 = xlib_dl::X11Library::load().map_err(|_| {
+                CreateWindowError::ContextCreationFailed(String::from("Cannot load Xlib"))
+            })?;
 
             // Loads Vulkan library.
             let _vk = vk_dl::VulkanLibrary::load().map_err(|_| {
-                WindowError::ContextCreation(String::from("Cannot load Vulkan library"))
+                CreateWindowError::ContextCreationFailed(String::from("Cannot load Vulkan library"))
             })?;
 
             // Opens X display.
             let display = x11.XOpenDisplay(ptr::null());
             if display.is_null() {
-                return Err(WindowError::ContextCreation(String::from(
+                return Err(CreateWindowError::ContextCreationFailed(String::from(
                     "Cannot open X display",
                 )));
             }
@@ -109,7 +110,7 @@ impl Window {
                 context.x11.XBlackPixel(context.display, default_screen),
             );
             if handle == 0 {
-                return Err(WindowError::WindowCreation);
+                return Err(CreateWindowError::WindowCreationFailed);
             }
 
             // Selects input events.

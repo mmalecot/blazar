@@ -1,14 +1,14 @@
 //! Multi-platform windowing API.
 
-/// Kinds of window errors.
+/// Kinds of window creation errors.
 #[derive(Debug)]
-pub enum WindowError {
-    ContextCreation(String),
-    WindowCreation,
+pub enum CreateWindowError {
+    ContextCreationFailed(String),
+    WindowCreationFailed,
 }
 
-/// Convenient result type consisting of a return type and a `WindowError`.
-pub type Result<T = ()> = std::result::Result<T, WindowError>;
+/// Convenient result type consisting of a return type and a `CreateWindowError`.
+pub type Result<T = ()> = std::result::Result<T, CreateWindowError>;
 
 #[cfg(target_os = "windows")]
 mod windows;
