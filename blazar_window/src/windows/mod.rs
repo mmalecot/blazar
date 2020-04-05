@@ -145,7 +145,7 @@ impl Window {
     /// Updates the event queue.
     fn update_event_queue(&mut self) {
         unsafe {
-            let window = wide_string("window");
+            let window = wide_string(env!("CARGO_PKG_NAME"));
             winapi::SetPropW(
                 self.handle,
                 window.as_ptr(),
@@ -166,7 +166,7 @@ impl Window {
         w_param: winapi::WPARAM,
         l_param: winapi::LPARAM,
     ) -> winapi::LRESULT {
-        let window = wide_string("window");
+        let window = wide_string(env!("CARGO_PKG_NAME"));
         let window = winapi::GetPropW(handle, window.as_ptr()) as *mut Window;
         if !window.is_null() {
             if let Some(event) = translate_event(message, w_param, l_param) {
