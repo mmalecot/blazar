@@ -7,14 +7,9 @@ use blazar_vk::*;
 use std::os::raw::*;
 
 dynamic_loading! {
-    pub enum VulkanDynamicLoadingError {
-        LibraryLoading,
-        FunctionLoading,
-    }
-
-    #[load(name = "vulkan", version = 1)]
-    pub struct VulkanLibrary {
-        fn vkGetInstanceProcAddr(
+    #[load(wrapper = VulkanLibrary, error = LoadVulkanError, name = "vulkan", version = 1)]
+    extern "C" {
+        pub fn vkGetInstanceProcAddr(
             instance: VkInstance,
             pName: *const c_char
         ) -> PFN_vkVoidFunction;

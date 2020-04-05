@@ -7,11 +7,11 @@ pub use blazar_libc as libc;
 #[doc(hidden)]
 #[macro_export]
 macro_rules! _library_filename {
-    ($lib_name:literal) => {
-        concat!("lib", $lib_name, ".so")
+    ($name:literal) => {
+        concat!("lib", $name, ".so")
     };
-    ($lib_name:literal, $lib_version:literal) => {
-        concat!("lib", $lib_name, ".so.", $lib_version)
+    ($name:literal, $version:literal) => {
+        concat!("lib", $name, ".so.", $version)
     };
 }
 

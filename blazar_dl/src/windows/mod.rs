@@ -6,11 +6,11 @@ pub use blazar_winapi as winapi;
 #[doc(hidden)]
 #[macro_export]
 macro_rules! _library_filename {
-    ($lib_name:literal) => {
-        concat!($lib_name, ".dll")
+    ($name:literal) => {
+        concat!($name, ".dll")
     };
-    ($lib_name:literal, $lib_version:literal) => {
-        concat!($lib_name, "-", $lib_version, ".dll")
+    ($name:literal, $version:literal) => {
+        concat!($name, "-", $version, ".dll")
     };
 }
 
