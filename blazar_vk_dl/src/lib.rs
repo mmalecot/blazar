@@ -3,7 +3,7 @@
 #![allow(non_snake_case)]
 
 use blazar_dl::dynamic_loading;
-use blazar_vk::*;
+use blazar_vk_sys::*;
 use std::os::raw::*;
 
 dynamic_loading! {

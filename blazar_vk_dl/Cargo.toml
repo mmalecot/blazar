@@ -8,5 +8,5 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/mmalecot/blazar"
 
 [dependencies]
-blazar_vk = { path = "../blazar_vk" }
+blazar_vk_sys = { path = "../blazar_vk_sys" }
 blazar_dl = { path = "../blazar_dl" }

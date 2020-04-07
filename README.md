@@ -81,13 +81,13 @@ cargo run --example simple_window
 The workspace is composed of the following members:
 - `blazar_dl`: Multi-platform dynamic loading API.
 - `blazar_event`: Definition of several types of events.
-- `blazar_libc`: libc raw FFI bindings.
-- `blazar_vk`: Vulkan raw FFI bindings.
+- `blazar_libc_sys`: libc raw FFI bindings.
 - `blazar_vk_dl`: Vulkan dynamic loading.
-- `blazar_winapi`: Windows API raw FFI bindings.
+- `blazar_vk_sys`: Vulkan raw FFI bindings.
+- `blazar_winapi_sys`: Windows API raw FFI bindings.
 - `blazar_window`: Multi-platform windowing API.
-- `blazar_xlib`: Xlib raw FFI bindings.
 - `blazar_xlib_dl`: Xlib dynamic loading.
+- `blazar_xlib_sys`: Xlib raw FFI bindings.
 
 ## License
 

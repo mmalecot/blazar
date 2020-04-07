@@ -3,7 +3,7 @@
 #![allow(clippy::too_many_arguments, non_snake_case)]
 
 use blazar_dl::dynamic_loading;
-use blazar_xlib::*;
+use blazar_xlib_sys::*;
 use std::os::raw::*;
 
 dynamic_loading! {

@@ -1,6 +1,6 @@
 //! Windows implementation.
 
-pub use blazar_winapi as winapi;
+pub use blazar_winapi_sys as winapi_sys;
 
 /// Returns a library filename.
 #[doc(hidden)]
@@ -19,7 +19,7 @@ macro_rules! _library_filename {
 #[macro_export]
 macro_rules! _handle_type {
     () => {
-        blazar_dl::winapi::HMODULE
+        blazar_dl::winapi_sys::HMODULE
     };
 }
 
@@ -29,7 +29,7 @@ macro_rules! _handle_type {
 macro_rules! _load_library {
     ($filename:expr) => {{
         let filename = std::ffi::CString::new($filename).unwrap();
-        blazar_dl::winapi::LoadLibraryA(filename.as_ptr())
+        blazar_dl::winapi_sys::LoadLibraryA(filename.as_ptr())
     }};
 }
 
@@ -39,7 +39,7 @@ macro_rules! _load_library {
 macro_rules! _load_function {
     ($handle:expr, $fn_name:ident) => {{
         let $fn_name = std::ffi::CString::new(stringify!($fn_name)).unwrap();
-        blazar_dl::winapi::GetProcAddress($handle, $fn_name.as_ptr())
+        blazar_dl::winapi_sys::GetProcAddress($handle, $fn_name.as_ptr())
     }};
 }
 
@@ -48,6 +48,6 @@ macro_rules! _load_function {
 #[macro_export]
 macro_rules! _unload_library {
     ($handle:expr) => {
-        blazar_dl::winapi::FreeLibrary($handle);
+        blazar_dl::winapi_sys::FreeLibrary($handle);
     };
 }

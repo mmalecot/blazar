@@ -8,7 +8,7 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/mmalecot/blazar"
 
 [target.'cfg(target_os = "linux")'.dependencies]
-blazar_libc = { path = "../blazar_libc" }
+blazar_libc_sys = { path = "../blazar_libc_sys" }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-blazar_winapi = { path = "../blazar_winapi" }
+blazar_winapi_sys = { path = "../blazar_winapi_sys" }

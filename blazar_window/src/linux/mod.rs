@@ -3,8 +3,8 @@
 use crate::{CreateWindowError, Result};
 use blazar_event::{Button, Event, Key};
 use blazar_vk_dl as vk_dl;
-use blazar_xlib as xlib;
 use blazar_xlib_dl as xlib_dl;
+use blazar_xlib_sys as xlib_sys;
 use std::{
     collections::VecDeque,
     ffi::CString,
@@ -17,12 +17,12 @@ use std::{
 pub(crate) struct Context {
     pub(crate) x11: xlib_dl::X11Library,
     pub(crate) _vk: vk_dl::VulkanLibrary,
-    pub(crate) display: *mut xlib::Display,
-    pub(crate) wm_protocols: xlib::Atom,
-    pub(crate) wm_delete_window: xlib::Atom,
-    pub(crate) utf8_string: xlib::Atom,
-    pub(crate) net_wm_name: xlib::Atom,
-    pub(crate) net_wm_icon_name: xlib::Atom,
+    pub(crate) display: *mut xlib_sys::Display,
+    pub(crate) wm_protocols: xlib_sys::Atom,
+    pub(crate) wm_delete_window: xlib_sys::Atom,
+    pub(crate) utf8_string: xlib_sys::Atom,
+    pub(crate) net_wm_name: xlib_sys::Atom,
+    pub(crate) net_wm_icon_name: xlib_sys::Atom,
 }
 
 impl Context {
@@ -48,15 +48,17 @@ impl Context {
 
             // Loads X atoms.
             let wm_protocols = CString::new("WM_PROTOCOLS").unwrap();
-            let wm_protocols = x11.XInternAtom(display, wm_protocols.as_ptr(), xlib::FALSE);
+            let wm_protocols = x11.XInternAtom(display, wm_protocols.as_ptr(), xlib_sys::FALSE);
             let wm_delete_window = CString::new("WM_DELETE_WINDOW").unwrap();
-            let wm_delete_window = x11.XInternAtom(display, wm_delete_window.as_ptr(), xlib::FALSE);
+            let wm_delete_window =
+                x11.XInternAtom(display, wm_delete_window.as_ptr(), xlib_sys::FALSE);
             let utf8_string = CString::new("UTF8_STRING").unwrap();
-            let utf8_string = x11.XInternAtom(display, utf8_string.as_ptr(), xlib::FALSE);
+            let utf8_string = x11.XInternAtom(display, utf8_string.as_ptr(), xlib_sys::FALSE);
             let net_wm_name = CString::new("_NET_WM_NAME").unwrap();
-            let net_wm_name = x11.XInternAtom(display, net_wm_name.as_ptr(), xlib::FALSE);
+            let net_wm_name = x11.XInternAtom(display, net_wm_name.as_ptr(), xlib_sys::FALSE);
             let net_wm_icon_name = CString::new("_NET_WM_ICON_NAME").unwrap();
-            let net_wm_icon_name = x11.XInternAtom(display, net_wm_icon_name.as_ptr(), xlib::FALSE);
+            let net_wm_icon_name =
+                x11.XInternAtom(display, net_wm_icon_name.as_ptr(), xlib_sys::FALSE);
 
             Ok(Context {
                 x11,
@@ -83,7 +85,7 @@ impl Drop for Context {
 /// Represents a window.
 pub struct Window {
     context: Context,
-    handle: xlib::Window,
+    handle: xlib_sys::Window,
     width: u32,
     height: u32,
     events: VecDeque<Event>,
@@ -117,14 +119,14 @@ impl Window {
             context.x11.XSelectInput(
                 context.display,
                 handle,
-                xlib::ButtonPressMask
-                    | xlib::ButtonReleaseMask
-                    | xlib::ExposureMask
-                    | xlib::FocusChangeMask
-                    | xlib::PointerMotionMask
-                    | xlib::KeyPressMask
-                    | xlib::KeyReleaseMask
-                    | xlib::StructureNotifyMask,
+                xlib_sys::ButtonPressMask
+                    | xlib_sys::ButtonReleaseMask
+                    | xlib_sys::ExposureMask
+                    | xlib_sys::FocusChangeMask
+                    | xlib_sys::PointerMotionMask
+                    | xlib_sys::KeyPressMask
+                    | xlib_sys::KeyReleaseMask
+                    | xlib_sys::StructureNotifyMask,
             );
 
             // Sets window's title.
@@ -146,7 +148,7 @@ impl Window {
                 context.net_wm_name,
                 context.utf8_string,
                 8,
-                xlib::PropModeReplace,
+                xlib_sys::PropModeReplace,
                 title.as_ptr() as *const c_uchar,
                 title.as_bytes().len() as c_int,
             );
@@ -156,7 +158,7 @@ impl Window {
                 context.net_wm_icon_name,
                 context.utf8_string,
                 8,
-                xlib::PropModeReplace,
+                xlib_sys::PropModeReplace,
                 title.as_ptr() as *const c_uchar,
                 title.as_bytes().len() as c_int,
             );
@@ -197,7 +199,7 @@ impl Window {
     fn update_event_queue(&mut self) {
         unsafe {
             while self.context.x11.XPending(self.context.display) > 0 {
-                let mut event: xlib::XEvent = mem::zeroed();
+                let mut event: xlib_sys::XEvent = mem::zeroed();
                 self.context
                     .x11
                     .XNextEvent(self.context.display, &mut event);
@@ -209,19 +211,19 @@ impl Window {
     }
 
     /// Translates `XEvent` into `Option<Event>`.
-    unsafe fn translate_event(&mut self, event: &mut xlib::XEvent) -> Option<Event> {
+    unsafe fn translate_event(&mut self, event: &mut xlib_sys::XEvent) -> Option<Event> {
         match event.r#type {
             // Window
-            xlib::ClientMessage
+            xlib_sys::ClientMessage
                 if event.client_message.message_type == self.context.wm_protocols
-                    && event.client_message.data.longs[0] as xlib::Atom
+                    && event.client_message.data.longs[0] as xlib_sys::Atom
                         == self.context.wm_delete_window =>
             {
                 Some(Event::Close)
             }
-            xlib::FocusIn => Some(Event::GainFocus),
-            xlib::FocusOut => Some(Event::LoseFocus),
-            xlib::ConfigureNotify
+            xlib_sys::FocusIn => Some(Event::GainFocus),
+            xlib_sys::FocusOut => Some(Event::LoseFocus),
+            xlib_sys::ConfigureNotify
                 if event.configure.width as u32 != self.width
                     || event.configure.height as u32 != self.height =>
             {
@@ -233,17 +235,17 @@ impl Window {
                 })
             }
             // Keyboard
-            xlib::KeyPress => self
+            xlib_sys::KeyPress => self
                 .translate_key_event(&mut event.key)
                 .map(|key| Event::KeyPress { key }),
-            xlib::KeyRelease => {
+            xlib_sys::KeyRelease => {
                 // Ignores auto-repeat.
                 if self.context.x11.XPending(self.context.display) > 0 {
-                    let mut next_event: xlib::XEvent = mem::zeroed();
+                    let mut next_event: xlib_sys::XEvent = mem::zeroed();
                     self.context
                         .x11
                         .XPeekEvent(self.context.display, &mut next_event);
-                    if next_event.r#type == xlib::KeyPress
+                    if next_event.r#type == xlib_sys::KeyPress
                         && next_event.key.keycode == event.key.keycode
                         && next_event.key.time - event.key.time < 20
                     {
@@ -257,23 +259,23 @@ impl Window {
                     .map(|key| Event::KeyRelease { key })
             }
             // Mouse
-            xlib::ButtonPress => match event.button.button {
-                xlib::Button4 => Some(Event::MouseScrollUp),
-                xlib::Button5 => Some(Event::MouseScrollDown),
+            xlib_sys::ButtonPress => match event.button.button {
+                xlib_sys::Button4 => Some(Event::MouseScrollUp),
+                xlib_sys::Button5 => Some(Event::MouseScrollDown),
                 _ => translate_button(event.button.button).map(|button| Event::MouseButtonPress {
                     button,
                     x: event.button.x,
                     y: event.button.y,
                 }),
             },
-            xlib::ButtonRelease => {
+            xlib_sys::ButtonRelease => {
                 translate_button(event.button.button).map(|button| Event::MouseButtonRelease {
                     button,
                     x: event.button.x,
                     y: event.button.y,
                 })
             }
-            xlib::MotionNotify => Some(Event::MouseMove {
+            xlib_sys::MotionNotify => Some(Event::MouseMove {
                 x: event.button.x,
                 y: event.button.y,
             }),
@@ -283,7 +285,7 @@ impl Window {
     }
 
     /// Translates an `XKeyEvent` into `Option<Key>`.
-    unsafe fn translate_key_event(&mut self, event: &mut xlib::XKeyEvent) -> Option<Key> {
+    unsafe fn translate_key_event(&mut self, event: &mut xlib_sys::XKeyEvent) -> Option<Key> {
         for index in 0..4 {
             if let Some(key) = translate_key(self.context.x11.XLookupKeysym(event, index)) {
                 return Some(key);
@@ -304,117 +306,117 @@ impl Drop for Window {
 }
 
 /// Translates a X11 key to `Option<Key>`.
-fn translate_key(symbol: xlib::KeySym) -> Option<Key> {
+fn translate_key(symbol: xlib_sys::KeySym) -> Option<Key> {
     Some(match symbol {
         // Typing
-        xlib::XK_A => Key::A,
-        xlib::XK_B => Key::B,
-        xlib::XK_C => Key::C,
-        xlib::XK_D => Key::D,
-        xlib::XK_E => Key::E,
-        xlib::XK_F => Key::F,
-        xlib::XK_G => Key::G,
-        xlib::XK_H => Key::H,
-        xlib::XK_I => Key::I,
-        xlib::XK_J => Key::J,
-        xlib::XK_K => Key::K,
-        xlib::XK_L => Key::L,
-        xlib::XK_M => Key::M,
-        xlib::XK_N => Key::N,
-        xlib::XK_O => Key::O,
-        xlib::XK_P => Key::P,
-        xlib::XK_Q => Key::Q,
-        xlib::XK_R => Key::R,
-        xlib::XK_S => Key::S,
-        xlib::XK_T => Key::T,
-        xlib::XK_U => Key::U,
-        xlib::XK_V => Key::V,
-        xlib::XK_W => Key::W,
-        xlib::XK_X => Key::X,
-        xlib::XK_Y => Key::Y,
-        xlib::XK_Z => Key::Z,
-        xlib::XK_0 => Key::Digit0,
-        xlib::XK_1 => Key::Digit1,
-        xlib::XK_2 => Key::Digit2,
-        xlib::XK_3 => Key::Digit3,
-        xlib::XK_4 => Key::Digit4,
-        xlib::XK_5 => Key::Digit5,
-        xlib::XK_6 => Key::Digit6,
-        xlib::XK_7 => Key::Digit7,
-        xlib::XK_8 => Key::Digit8,
-        xlib::XK_9 => Key::Digit9,
-        xlib::XK_grave => Key::Backquote,
-        xlib::XK_minus => Key::Minus,
-        xlib::XK_equal => Key::Equal,
-        xlib::XK_bracketleft => Key::LeftBracket,
-        xlib::XK_bracketright => Key::RightBracket,
-        xlib::XK_backslash => Key::Backslash,
-        xlib::XK_semicolon => Key::Semicolon,
-        xlib::XK_apostrophe => Key::Quote,
-        xlib::XK_comma => Key::Comma,
-        xlib::XK_period => Key::Period,
-        xlib::XK_slash => Key::Slash,
-        xlib::XK_Tab => Key::Tab,
-        xlib::XK_Caps_Lock => Key::CapsLock,
-        xlib::XK_Shift_L => Key::LeftShift,
-        xlib::XK_BackSpace => Key::Backspace,
-        xlib::XK_Return => Key::Enter,
-        xlib::XK_Shift_R => Key::RightShift,
-        xlib::XK_space => Key::Space,
+        xlib_sys::XK_A => Key::A,
+        xlib_sys::XK_B => Key::B,
+        xlib_sys::XK_C => Key::C,
+        xlib_sys::XK_D => Key::D,
+        xlib_sys::XK_E => Key::E,
+        xlib_sys::XK_F => Key::F,
+        xlib_sys::XK_G => Key::G,
+        xlib_sys::XK_H => Key::H,
+        xlib_sys::XK_I => Key::I,
+        xlib_sys::XK_J => Key::J,
+        xlib_sys::XK_K => Key::K,
+        xlib_sys::XK_L => Key::L,
+        xlib_sys::XK_M => Key::M,
+        xlib_sys::XK_N => Key::N,
+        xlib_sys::XK_O => Key::O,
+        xlib_sys::XK_P => Key::P,
+        xlib_sys::XK_Q => Key::Q,
+        xlib_sys::XK_R => Key::R,
+        xlib_sys::XK_S => Key::S,
+        xlib_sys::XK_T => Key::T,
+        xlib_sys::XK_U => Key::U,
+        xlib_sys::XK_V => Key::V,
+        xlib_sys::XK_W => Key::W,
+        xlib_sys::XK_X => Key::X,
+        xlib_sys::XK_Y => Key::Y,
+        xlib_sys::XK_Z => Key::Z,
+        xlib_sys::XK_0 => Key::Digit0,
+        xlib_sys::XK_1 => Key::Digit1,
+        xlib_sys::XK_2 => Key::Digit2,
+        xlib_sys::XK_3 => Key::Digit3,
+        xlib_sys::XK_4 => Key::Digit4,
+        xlib_sys::XK_5 => Key::Digit5,
+        xlib_sys::XK_6 => Key::Digit6,
+        xlib_sys::XK_7 => Key::Digit7,
+        xlib_sys::XK_8 => Key::Digit8,
+        xlib_sys::XK_9 => Key::Digit9,
+        xlib_sys::XK_grave => Key::Backquote,
+        xlib_sys::XK_minus => Key::Minus,
+        xlib_sys::XK_equal => Key::Equal,
+        xlib_sys::XK_bracketleft => Key::LeftBracket,
+        xlib_sys::XK_bracketright => Key::RightBracket,
+        xlib_sys::XK_backslash => Key::Backslash,
+        xlib_sys::XK_semicolon => Key::Semicolon,
+        xlib_sys::XK_apostrophe => Key::Quote,
+        xlib_sys::XK_comma => Key::Comma,
+        xlib_sys::XK_period => Key::Period,
+        xlib_sys::XK_slash => Key::Slash,
+        xlib_sys::XK_Tab => Key::Tab,
+        xlib_sys::XK_Caps_Lock => Key::CapsLock,
+        xlib_sys::XK_Shift_L => Key::LeftShift,
+        xlib_sys::XK_BackSpace => Key::Backspace,
+        xlib_sys::XK_Return => Key::Enter,
+        xlib_sys::XK_Shift_R => Key::RightShift,
+        xlib_sys::XK_space => Key::Space,
         // Control
-        xlib::XK_Escape => Key::Escape,
-        xlib::XK_Print => Key::PrintScreen,
-        xlib::XK_Scroll_Lock => Key::ScrollLock,
-        xlib::XK_Break => Key::Pause,
-        xlib::XK_Control_L => Key::LeftControl,
-        xlib::XK_Super_L => Key::LeftSuper,
-        xlib::XK_Alt_L => Key::LeftAlt,
-        xlib::XK_Alt_R => Key::RightAlt,
-        xlib::XK_Super_R => Key::RightSuper,
-        xlib::XK_Menu => Key::Menu,
-        xlib::XK_Control_R => Key::RightControl,
+        xlib_sys::XK_Escape => Key::Escape,
+        xlib_sys::XK_Print => Key::PrintScreen,
+        xlib_sys::XK_Scroll_Lock => Key::ScrollLock,
+        xlib_sys::XK_Break => Key::Pause,
+        xlib_sys::XK_Control_L => Key::LeftControl,
+        xlib_sys::XK_Super_L => Key::LeftSuper,
+        xlib_sys::XK_Alt_L => Key::LeftAlt,
+        xlib_sys::XK_Alt_R => Key::RightAlt,
+        xlib_sys::XK_Super_R => Key::RightSuper,
+        xlib_sys::XK_Menu => Key::Menu,
+        xlib_sys::XK_Control_R => Key::RightControl,
         // Function
-        xlib::XK_F1 => Key::F1,
-        xlib::XK_F2 => Key::F2,
-        xlib::XK_F3 => Key::F3,
-        xlib::XK_F4 => Key::F4,
-        xlib::XK_F5 => Key::F5,
-        xlib::XK_F6 => Key::F6,
-        xlib::XK_F7 => Key::F7,
-        xlib::XK_F8 => Key::F8,
-        xlib::XK_F9 => Key::F9,
-        xlib::XK_F10 => Key::F10,
-        xlib::XK_F11 => Key::F11,
-        xlib::XK_F12 => Key::F12,
+        xlib_sys::XK_F1 => Key::F1,
+        xlib_sys::XK_F2 => Key::F2,
+        xlib_sys::XK_F3 => Key::F3,
+        xlib_sys::XK_F4 => Key::F4,
+        xlib_sys::XK_F5 => Key::F5,
+        xlib_sys::XK_F6 => Key::F6,
+        xlib_sys::XK_F7 => Key::F7,
+        xlib_sys::XK_F8 => Key::F8,
+        xlib_sys::XK_F9 => Key::F9,
+        xlib_sys::XK_F10 => Key::F10,
+        xlib_sys::XK_F11 => Key::F11,
+        xlib_sys::XK_F12 => Key::F12,
         // Navigation
-        xlib::XK_Insert => Key::Insert,
-        xlib::XK_Delete => Key::Delete,
-        xlib::XK_Home => Key::Home,
-        xlib::XK_End => Key::End,
-        xlib::XK_Prior => Key::PageUp,
-        xlib::XK_Next => Key::PageDown,
-        xlib::XK_Up => Key::UpArrow,
-        xlib::XK_Down => Key::DownArrow,
-        xlib::XK_Left => Key::LeftArrow,
-        xlib::XK_Right => Key::RightArrow,
+        xlib_sys::XK_Insert => Key::Insert,
+        xlib_sys::XK_Delete => Key::Delete,
+        xlib_sys::XK_Home => Key::Home,
+        xlib_sys::XK_End => Key::End,
+        xlib_sys::XK_Prior => Key::PageUp,
+        xlib_sys::XK_Next => Key::PageDown,
+        xlib_sys::XK_Up => Key::UpArrow,
+        xlib_sys::XK_Down => Key::DownArrow,
+        xlib_sys::XK_Left => Key::LeftArrow,
+        xlib_sys::XK_Right => Key::RightArrow,
         // Numeric keypad
-        xlib::XK_Num_Lock => Key::NumLock,
-        xlib::XK_KP_0 => Key::Numpad0,
-        xlib::XK_KP_1 => Key::Numpad1,
-        xlib::XK_KP_2 => Key::Numpad2,
-        xlib::XK_KP_3 => Key::Numpad3,
-        xlib::XK_KP_4 => Key::Numpad4,
-        xlib::XK_KP_5 => Key::Numpad5,
-        xlib::XK_KP_6 => Key::Numpad6,
-        xlib::XK_KP_7 => Key::Numpad7,
-        xlib::XK_KP_8 => Key::Numpad8,
-        xlib::XK_KP_9 => Key::Numpad9,
-        xlib::XK_KP_Enter => Key::NumpadEnter,
-        xlib::XK_KP_Divide => Key::NumpadDivide,
-        xlib::XK_KP_Multiply => Key::NumpadMultiply,
-        xlib::XK_KP_Subtract => Key::NumpadSubtract,
-        xlib::XK_KP_Add => Key::NumpadAdd,
-        xlib::XK_KP_Decimal => Key::NumpadDecimal,
+        xlib_sys::XK_Num_Lock => Key::NumLock,
+        xlib_sys::XK_KP_0 => Key::Numpad0,
+        xlib_sys::XK_KP_1 => Key::Numpad1,
+        xlib_sys::XK_KP_2 => Key::Numpad2,
+        xlib_sys::XK_KP_3 => Key::Numpad3,
+        xlib_sys::XK_KP_4 => Key::Numpad4,
+        xlib_sys::XK_KP_5 => Key::Numpad5,
+        xlib_sys::XK_KP_6 => Key::Numpad6,
+        xlib_sys::XK_KP_7 => Key::Numpad7,
+        xlib_sys::XK_KP_8 => Key::Numpad8,
+        xlib_sys::XK_KP_9 => Key::Numpad9,
+        xlib_sys::XK_KP_Enter => Key::NumpadEnter,
+        xlib_sys::XK_KP_Divide => Key::NumpadDivide,
+        xlib_sys::XK_KP_Multiply => Key::NumpadMultiply,
+        xlib_sys::XK_KP_Subtract => Key::NumpadSubtract,
+        xlib_sys::XK_KP_Add => Key::NumpadAdd,
+        xlib_sys::XK_KP_Decimal => Key::NumpadDecimal,
         // Unknown
         _ => return None,
     })
@@ -424,9 +426,9 @@ fn translate_key(symbol: xlib::KeySym) -> Option<Key> {
 fn translate_button(button: c_uint) -> Option<Button> {
     Some(match button {
         // Common
-        xlib::Button1 => Button::Left,
-        xlib::Button2 => Button::Middle,
-        xlib::Button3 => Button::Right,
+        xlib_sys::Button1 => Button::Left,
+        xlib_sys::Button2 => Button::Middle,
+        xlib_sys::Button3 => Button::Right,
         // Extra
         8 => Button::Back,
         9 => Button::Forward,

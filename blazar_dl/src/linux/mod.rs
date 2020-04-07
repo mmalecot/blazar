@@ -1,7 +1,7 @@
 //! Linux implementation.
 
 #[doc(hidden)]
-pub use blazar_libc as libc;
+pub use blazar_libc_sys as libc_sys;
 
 /// Returns a library filename.
 #[doc(hidden)]
@@ -30,7 +30,7 @@ macro_rules! _handle_type {
 macro_rules! _load_library {
     ($filename:expr) => {{
         let filename = std::ffi::CString::new($filename).unwrap();
-        blazar_dl::libc::dlopen(filename.as_ptr(), blazar_dl::libc::RTLD_NOW)
+        blazar_dl::libc_sys::dlopen(filename.as_ptr(), blazar_dl::libc_sys::RTLD_NOW)
     }};
 }
 
@@ -40,7 +40,7 @@ macro_rules! _load_library {
 macro_rules! _load_function {
     ($handle:expr, $fn_name:ident) => {{
         let $fn_name = std::ffi::CString::new(stringify!($fn_name)).unwrap();
-        blazar_dl::libc::dlsym($handle, $fn_name.as_ptr())
+        blazar_dl::libc_sys::dlsym($handle, $fn_name.as_ptr())
     }};
 }
 
@@ -49,6 +49,6 @@ macro_rules! _load_function {
 #[macro_export]
 macro_rules! _unload_library {
     ($handle:expr) => {
-        blazar_dl::libc::dlclose($handle);
+        blazar_dl::libc_sys::dlclose($handle);
     };
 }

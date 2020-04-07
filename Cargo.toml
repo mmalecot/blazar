@@ -17,12 +17,12 @@ exclude = [".github/*", "examples/*"]
 members = [
     # Internal
     "blazar_dl",
-    "blazar_libc",
-    "blazar_vk",
+    "blazar_libc_sys",
     "blazar_vk_dl",
-    "blazar_winapi",
-    "blazar_xlib",
+    "blazar_vk_sys",
+    "blazar_winapi_sys",
     "blazar_xlib_dl",
+    "blazar_xlib_sys",
     # Re-exports
     "blazar_event",
     "blazar_window",
