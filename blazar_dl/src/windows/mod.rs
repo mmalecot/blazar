@@ -1,5 +1,6 @@
 //! Windows implementation.
 
+#[doc(hidden)]
 pub use blazar_winapi_sys as winapi_sys;
 
 /// Returns a library filename.
