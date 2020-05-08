@@ -1,7 +1,5 @@
 //! Opens an empty window and prints events to stdout.
 
-#![windows_subsystem = "windows"]
-
 use blazar::{
     event::{Event, Key},
     window::{Result, Window},
