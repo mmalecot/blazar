@@ -4,7 +4,7 @@
 [![Crates.io](https://img.shields.io/crates/v/blazar)](https://crates.io/crates/blazar)
 [![Docs.rs](https://docs.rs/blazar/badge.svg)](https://docs.rs/blazar)
 ![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)
-![Rust](https://img.shields.io/badge/rust-1.42+-blueviolet.svg?logo=rust)
+![Rust](https://img.shields.io/badge/rust-1.43+-blueviolet.svg?logo=rust)
 
 Simple and lite game engine focused on:
 - Performance
