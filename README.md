@@ -1,8 +1,6 @@
 # Blazar
 
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/mmalecot/blazar/CI)
-[![Crates.io](https://img.shields.io/crates/v/blazar)](https://crates.io/crates/blazar)
-[![Docs.rs](https://docs.rs/blazar/badge.svg)](https://docs.rs/blazar)
 ![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)
 ![Rust](https://img.shields.io/badge/rust-1.43+-blueviolet.svg?logo=rust)
 
@@ -12,15 +10,6 @@ Simple and lite game engine focused on:
 - Convenient API
 - Modernity (thanks to the Vulkan graphics API)
 - Multi-platform support (Windows and Linux)
-
-## Usage
-
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-blazar = "1.0.0-dev.1"
-```
 
 ## References
 
